@@ -90,6 +90,15 @@ void updateObstaclePosition(Obstacle &obs, int maxY, int maxX) {
   obs.y = 2 + (rand() % (maxX / 2 - 6));
 }
 
+void drawPauseScreen(WINDOW *win, int maxY, int maxX) {
+  string pauseText = "GAME PAUSED";
+  string resumeText = "Press 'p' to resume";
+  mvwprintw(win, maxY / 2, (maxX - pauseText.length()) / 2, "%s",
+            pauseText.c_str());
+  mvwprintw(win, maxY / 2 + 1, (maxX - resumeText.length()) / 2, "%s",
+            resumeText.c_str());
+}
+
 int main() {
   initscr();
   start_color();
@@ -123,20 +132,44 @@ int main() {
   int obstacleTime = 0;
   bool ballAdded = false;
   int prevScore = score;
+  bool isPaused = false;
 
   while (running) {
     for (int k = 0; k < 15; k++) {
       int ch = getch();
-      if (ch == KEY_LEFT && paddle.x > 1) {
-        paddle.x -= 3;
-      } else if (ch == KEY_RIGHT && paddle.x < maxX - 3 - paddle.pad.length()) {
-        paddle.x += 3;
-      } else if (ch == 'q') {
+      if (!isPaused) {
+        if (ch == KEY_LEFT && paddle.x > 1) {
+          paddle.x -= 3;
+        } else if (ch == KEY_RIGHT &&
+                   paddle.x < maxX - 3 - paddle.pad.length()) {
+          paddle.x += 3;
+        }
+      }
+
+      if (ch == 'q') {
         running = false;
         break;
+      } else if (ch == 'p') {
+        isPaused = !isPaused;
+        if (isPaused) {
+          nodelay(stdscr, FALSE);
+          werase(win);
+          box(win, 0, 0);
+          drawPauseScreen(win, maxY - 2, maxX - 2);
+          wrefresh(win);
+        } else {
+          nodelay(stdscr, TRUE);
+        }
       }
-      usleep(500);
+      if (!isPaused) {
+        usleep(500);
+      }
     }
+
+    if (!running)
+      break;
+    if (isPaused)
+      continue;
 
     if (ballUpdateCounter >= 5) {
       for (Ball &ball : balls) {
@@ -154,9 +187,6 @@ int main() {
       }
       ballUpdateCounter = 0;
     }
-
-    if (!running)
-      break;
 
     ballUpdateCounter++;
     werase(win);
