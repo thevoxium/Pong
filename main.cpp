@@ -21,6 +21,12 @@ struct Paddle {
   int y;
 };
 
+struct Obstacle {
+  string shape = "____________________";
+  int x;
+  int y;
+};
+
 void updateBallposition(Ball &ball, int maxY, int maxX) {
   if (ball.y <= 1)
     ball.dy = -ball.dy;
@@ -40,6 +46,31 @@ bool checkCollision(Ball &ball, Paddle &paddle) {
   return false;
 }
 
+bool checkObstacleCollision(Ball &ball, Obstacle &obstacle) {
+  if (ball.x >= obstacle.x && ball.x <= obstacle.x + obstacle.shape.length()) {
+    if (ball.y == obstacle.y - 1 && ball.dy > 0) {
+      ball.dy = -ball.dy;
+      return true;
+    }
+    if (ball.y == obstacle.y + 1 && ball.dy < 0) {
+      ball.dy = -ball.dy;
+      return true;
+    }
+  }
+
+  if (ball.y == obstacle.y) {
+    if (ball.x == obstacle.x - 1 && ball.dx > 0) {
+      ball.dx = -ball.dx;
+      return true;
+    }
+    if (ball.x == obstacle.x + obstacle.shape.length() && ball.dx < 0) {
+      ball.dx = -ball.dx;
+      return true;
+    }
+  }
+  return false;
+}
+
 void resetBall(Ball &ball, int maxX, int maxY) {
   ball.x = 2 + (rand() % (maxX / 2 - 6));
   ball.y = 2 + (rand() % (maxY / 2 - 6));
@@ -53,6 +84,12 @@ void updateNumberOfBalls(vector<Ball> &balls, int maxY, int maxX) {
   newBall.y = maxY / 2;
   balls.push_back(newBall);
 }
+
+void updateObstaclePosition(Obstacle &obs, int maxY, int maxX) {
+  obs.x = 2 + (rand() % (maxX / 2 - 6));
+  obs.y = 2 + (rand() % (maxX / 2 - 6));
+}
+
 int main() {
   initscr();
   start_color();
@@ -82,9 +119,11 @@ int main() {
 
   int ballUpdateCounter = 0;
   bool running = true;
-
+  Obstacle obs;
+  int obstacleTime = 0;
   bool ballAdded = false;
   int prevScore = score;
+
   while (running) {
     for (int k = 0; k < 15; k++) {
       int ch = getch();
@@ -109,6 +148,7 @@ int main() {
             score++;
             ball.dy = -ball.dy;
           }
+          checkObstacleCollision(ball, obs);
           updateBallposition(ball, maxY - 2, maxX - 2);
         }
       }
@@ -126,11 +166,17 @@ int main() {
     for (const Ball &ball : balls) {
       mvwprintw(win, ball.y, ball.x, "%s", ball.shape.c_str());
     }
+
+    if (obstacleTime % 1000 == 0) {
+      updateObstaclePosition(obs, maxY, maxX);
+    }
+
+    mvwprintw(win, obs.y, obs.x, "%s", obs.shape.c_str());
     mvwprintw(win, 2, 2, "Score: %d", score);
-
     wrefresh(win);
+    obstacleTime++;
 
-    if (score - prevScore >= 3 && score > 0 && ball.size() < 5) {
+    if (score - prevScore >= 3 && score > 0 && balls.size() < 3) {
       updateNumberOfBalls(balls, maxY, maxX);
       prevScore = score;
     }

@@ -11,6 +11,6 @@ g++ -o game main.cpp -lncurses && ./game
 - Q: Quit game
 
 ## Todo
-- Multiple Balls
-- Random Obstacles Popping
+- ~~Multiple Balls~~
+- ~~Random Obstacles Popping~~
 
