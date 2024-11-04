@@ -176,7 +176,7 @@ int main() {
     wrefresh(win);
     obstacleTime++;
 
-    if (score - prevScore >= 3 && score > 0 && balls.size() < 3) {
+    if (score - prevScore >= 10 && score > 0 && balls.size() < 3) {
       updateNumberOfBalls(balls, maxY, maxX);
       prevScore = score;
     }
