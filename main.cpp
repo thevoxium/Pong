@@ -1,3 +1,5 @@
+#include <SDL.h>
+#include <SDL_mixer.h>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -5,7 +7,39 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+
 using namespace std;
+
+Mix_Chunk *paddleAudio = nullptr;
+
+bool initializeAudio() {
+  if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+    return false;
+  }
+
+  if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+    return false;
+  }
+  paddleAudio = Mix_LoadWAV("audio/audio.wav");
+  if (paddleAudio == nullptr) {
+    return false;
+  }
+  return true;
+}
+
+void playPaddleHitSound() {
+  if (paddleAudio != nullptr) {
+    Mix_PlayChannel(-1, paddleAudio, 0);
+  }
+}
+
+void cleanupAudio() {
+  if (paddleAudio != nullptr) {
+    Mix_FreeChunk(paddleAudio);
+  }
+  Mix_CloseAudio();
+  SDL_Quit();
+}
 
 struct Ball {
   string shape = "O";
@@ -40,6 +74,7 @@ bool checkCollision(Ball &ball, Paddle &paddle) {
   if (ball.y == paddle.y - 1) {
     if (ball.x >= paddle.x && ball.x <= paddle.x + paddle.pad.length()) {
       ball.y = paddle.y - 2;
+      playPaddleHitSound();
       return true;
     }
   }
@@ -100,6 +135,14 @@ void drawPauseScreen(WINDOW *win, int maxY, int maxX) {
 }
 
 int main() {
+  if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+    std::cout << "SDL initialization failed: " << SDL_GetError() << std::endl;
+    return 1;
+  }
+  if (!initializeAudio()) {
+    std::cout << "Audio initialization failed!";
+  }
+
   initscr();
   start_color();
   cbreak();
@@ -211,7 +254,7 @@ int main() {
       prevScore = score;
     }
   }
-
+  cleanupAudio();
   endwin();
   return 0;
 }
