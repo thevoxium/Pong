@@ -9,3 +9,8 @@ g++ -o game main.cpp -lncurses && ./game
 - Left Arrow: Move paddle left
 - Right Arrow: Move paddle right
 - Q: Quit game
+
+## Todo
+- Multiple Balls
+- Random Obstacles Popping
+
