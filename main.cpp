@@ -11,6 +11,7 @@
 using namespace std;
 
 Mix_Chunk *paddleAudio = nullptr;
+Mix_Chunk *missedAudio = nullptr;
 
 bool initializeAudio() {
   if (SDL_Init(SDL_INIT_AUDIO) < 0) {
@@ -20,11 +21,18 @@ bool initializeAudio() {
   if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
     return false;
   }
+  missedAudio = Mix_LoadWAV("audio/missed.wav");
   paddleAudio = Mix_LoadWAV("audio/audio.wav");
   if (paddleAudio == nullptr) {
     return false;
   }
   return true;
+}
+
+void playMissedSound() {
+  if (missedAudio != nullptr) {
+    Mix_PlayChannel(-1, missedAudio, 0);
+  }
 }
 
 void playPaddleHitSound() {
@@ -36,6 +44,9 @@ void playPaddleHitSound() {
 void cleanupAudio() {
   if (paddleAudio != nullptr) {
     Mix_FreeChunk(paddleAudio);
+  }
+  if (missedAudio != nullptr) {
+    Mix_FreeChunk(missedAudio);
   }
   Mix_CloseAudio();
   SDL_Quit();
@@ -218,6 +229,7 @@ int main() {
       for (Ball &ball : balls) {
         if (ball.y >= paddle.y) {
           resetBall(ball, maxX - 2, maxY - 2);
+          playMissedSound();
           score--;
         } else {
           if (checkCollision(ball, paddle)) {
